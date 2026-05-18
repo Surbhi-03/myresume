@@ -1,0 +1,561 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Prompt Engineering Guide</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;700&display=swap" rel="stylesheet">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Space Grotesk', sans-serif;
+      background: #050816;
+      color: #e5ecff;
+      overflow-x: hidden;
+      line-height: 1.7;
+    }
+
+    .bg-grid {
+      position: fixed;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px);
+      background-size: 40px 40px;
+      z-index: -2;
+    }
+
+    .glow {
+      position: fixed;
+      width: 600px;
+      height: 600px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(0,255,200,0.18), transparent 70%);
+      top: -200px;
+      right: -150px;
+      z-index: -1;
+      filter: blur(10px);
+    }
+
+    .glow-2 {
+      position: fixed;
+      width: 500px;
+      height: 500px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(132,0,255,0.18), transparent 70%);
+      bottom: -150px;
+      left: -100px;
+      z-index: -1;
+      filter: blur(20px);
+    }
+
+    .container {
+      width: min(1180px, 92%);
+      margin: auto;
+      padding-bottom: 100px;
+    }
+
+    .hero {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 24px;
+      position: relative;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      border: 1px solid rgba(255,255,255,0.1);
+      background: rgba(255,255,255,0.04);
+      padding: 12px 18px;
+      border-radius: 999px;
+      width: fit-content;
+      backdrop-filter: blur(12px);
+      color: #9fffe7;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      font-size: 0.8rem;
+    }
+
+    h1 {
+      font-size: clamp(3rem, 7vw, 6rem);
+      line-height: 1;
+      max-width: 900px;
+      letter-spacing: -3px;
+    }
+
+    .gradient-text {
+      background: linear-gradient(90deg, #8cf6ff, #8d7dff, #00ffbb);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .hero p {
+      max-width: 760px;
+      color: #b8c4e4;
+      font-size: 1.15rem;
+    }
+
+    .hero-card {
+      margin-top: 32px;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 20px;
+    }
+
+    .card {
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.08);
+      padding: 24px;
+      border-radius: 24px;
+      backdrop-filter: blur(14px);
+      transition: 0.3s ease;
+    }
+
+    .card:hover {
+      transform: translateY(-6px);
+      border-color: rgba(0,255,200,0.4);
+      box-shadow: 0 0 30px rgba(0,255,200,0.15);
+    }
+
+    .card h3 {
+      margin-bottom: 10px;
+      font-size: 1.1rem;
+    }
+
+    section {
+      margin-top: 120px;
+    }
+
+    .section-title {
+      font-size: 2.6rem;
+      margin-bottom: 16px;
+    }
+
+    .section-subtitle {
+      max-width: 760px;
+      color: #b8c4e4;
+      margin-bottom: 40px;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 24px;
+    }
+
+    .glass {
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 28px;
+      padding: 30px;
+      backdrop-filter: blur(12px);
+    }
+
+    .glass h3 {
+      margin-bottom: 18px;
+      font-size: 1.35rem;
+      color: #8cf6ff;
+    }
+
+    .glass ul {
+      padding-left: 18px;
+      color: #cbd7f5;
+    }
+
+    .glass li {
+      margin-bottom: 10px;
+    }
+
+    .prompt-box {
+      margin-top: 18px;
+      background: #0b1025;
+      border: 1px solid rgba(255,255,255,0.08);
+      padding: 20px;
+      border-radius: 20px;
+      font-family: monospace;
+      overflow-x: auto;
+      color: #8dffcb;
+      font-size: 0.95rem;
+    }
+
+    .timeline {
+      display: flex;
+      flex-direction: column;
+      gap: 22px;
+    }
+
+    .timeline-item {
+      display: flex;
+      gap: 20px;
+      align-items: flex-start;
+      background: rgba(255,255,255,0.04);
+      padding: 22px;
+      border-radius: 22px;
+      border: 1px solid rgba(255,255,255,0.06);
+    }
+
+    .step {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #00ffbb, #7b61ff);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+      color: #050816;
+      flex-shrink: 0;
+    }
+
+    .timeline-item h4 {
+      margin-bottom: 8px;
+      font-size: 1.15rem;
+    }
+
+    .framework {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 18px;
+      margin-top: 30px;
+    }
+
+    .framework-card {
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 20px;
+      padding: 22px;
+    }
+
+    .framework-card h4 {
+      margin-bottom: 10px;
+      color: #00ffbb;
+    }
+
+    .footer {
+      margin-top: 120px;
+      text-align: center;
+      padding: 60px 0;
+      color: #8ea0c9;
+      border-top: 1px solid rgba(255,255,255,0.08);
+    }
+
+    .highlight {
+      color: #00ffbb;
+      font-weight: 600;
+    }
+
+    @media (max-width: 768px) {
+      .hero {
+        padding-top: 100px;
+      }
+
+      h1 {
+        letter-spacing: -1px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="bg-grid"></div>
+  <div class="glow"></div>
+  <div class="glow-2"></div>
+
+  <div class="container">
+    <section class="hero">
+      <div class="badge">AI • Systems Thinking • Creativity</div>
+      <h1>
+        Prompt Engineering <br>
+        <span class="gradient-text">Built For Your Thinking Style</span>
+      </h1>
+      <p>
+        Based on your conversation patterns, you naturally think like a founder, systems designer, and product strategist. You ask layered questions, connect industries together, and explore ideas deeply instead of seeking surface-level answers. This guide is designed around that mindset — practical, futuristic, strategic, and execution-focused.
+      </p>
+
+      <div class="hero-card">
+        <div class="card">
+          <h3>🧠 Your Prompt Style</h3>
+          <p>You think in ecosystems, workflows, and scalable systems rather than isolated questions.</p>
+        </div>
+
+        <div class="card">
+          <h3>🚀 Your Advantage</h3>
+          <p>You naturally use iterative thinking — one of the strongest prompt engineering traits.</p>
+        </div>
+
+        <div class="card">
+          <h3>⚡ Your Learning Path</h3>
+          <p>Move from asking questions → designing AI workflows → building AI-powered businesses.</p>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <h2 class="section-title">What Is Prompt Engineering?</h2>
+      <p class="section-subtitle">
+        Prompt engineering is not just “asking AI questions.” It is the skill of structuring thinking clearly enough that AI becomes a strategic partner instead of a chatbot.
+      </p>
+
+      <div class="grid">
+        <div class="glass">
+          <h3>Beginner Level</h3>
+          <ul>
+            <li>Ask better questions</li>
+            <li>Get clearer outputs</li>
+            <li>Use AI faster than others</li>
+          </ul>
+        </div>
+
+        <div class="glass">
+          <h3>Intermediate Level</h3>
+          <ul>
+            <li>Create reusable prompt systems</li>
+            <li>Chain multiple prompts together</li>
+            <li>Guide AI using frameworks</li>
+          </ul>
+        </div>
+
+        <div class="glass">
+          <h3>Advanced Level</h3>
+          <ul>
+            <li>Build AI workflows & agents</li>
+            <li>Create AI-first startups</li>
+            <li>Use AI as a thinking multiplier</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <h2 class="section-title">The Founder Prompt Framework</h2>
+      <p class="section-subtitle">
+        This framework matches your natural way of exploring ideas.
+      </p>
+
+      <div class="framework">
+        <div class="framework-card">
+          <h4>1. Context</h4>
+          <p>Explain the world, problem, or industry.</p>
+        </div>
+
+        <div class="framework-card">
+          <h4>2. Objective</h4>
+          <p>Define exactly what you want AI to achieve.</p>
+        </div>
+
+        <div class="framework-card">
+          <h4>3. Constraints</h4>
+          <p>Add limitations like budget, timeline, audience, or style.</p>
+        </div>
+
+        <div class="framework-card">
+          <h4>4. Output Style</h4>
+          <p>Tell AI how the answer should look.</p>
+        </div>
+      </div>
+
+      <div class="prompt-box">
+You are a startup strategist.
+
+Context:
+I am building an AI workflow platform for MSMEs in India.
+
+Objective:
+Identify 5 operational pain points that can be automated using AI.
+
+Constraints:
+- Focus on companies with less than 100 employees
+- Avoid expensive enterprise solutions
+- Solutions should be deployable within 30 days
+
+Output Style:
+Use tables, practical examples, and implementation steps.
+      </div>
+    </section>
+
+    <section>
+      <h2 class="section-title">Prompting Techniques You’ll Naturally Be Good At</h2>
+      <div class="timeline">
+        <div class="timeline-item">
+          <div class="step">1</div>
+          <div>
+            <h4>Layered Prompting</h4>
+            <p>You naturally ask follow-up questions. This is powerful because advanced prompting is iterative, not one-shot.</p>
+          </div>
+        </div>
+
+        <div class="timeline-item">
+          <div class="step">2</div>
+          <div>
+            <h4>Systems Prompting</h4>
+            <p>You think about workflows, ecosystems, and operations. That’s exactly how AI agents are designed.</p>
+          </div>
+        </div>
+
+        <div class="timeline-item">
+          <div class="step">3</div>
+          <div>
+            <h4>Role-Based Prompting</h4>
+            <p>You often explore perspectives like founder, builder, operator, investor, or customer. That improves AI depth dramatically.</p>
+          </div>
+        </div>
+
+        <div class="timeline-item">
+          <div class="step">4</div>
+          <div>
+            <h4>Constraint Prompting</h4>
+            <p>You frequently include practical limitations like budget, timing, market size, or scalability.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <h2 class="section-title">Your Prompt Engineering Stack</h2>
+      <div class="grid">
+        <div class="glass">
+          <h3>Research Prompts</h3>
+          <div class="prompt-box">
+Act like a market researcher.
+Find hidden inefficiencies in the Indian construction supply chain.
+Focus on problems that are frequent, expensive, and emotionally frustrating.
+          </div>
+        </div>
+
+        <div class="glass">
+          <h3>Startup Thinking Prompts</h3>
+          <div class="prompt-box">
+Pretend you are an early-stage VC.
+Criticize this startup idea brutally.
+Find weaknesses in scalability, distribution, and monetization.
+          </div>
+        </div>
+
+        <div class="glass">
+          <h3>Execution Prompts</h3>
+          <div class="prompt-box">
+Break this startup into a 30-day execution roadmap.
+Focus only on MVP-level actions.
+Avoid unnecessary complexity.
+          </div>
+        </div>
+
+        <div class="glass">
+          <h3>Creative Product Prompts</h3>
+          <div class="prompt-box">
+Generate futuristic product experiences for a smart home improvement brand.
+Combine AI, retail, and consumer psychology.
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <h2 class="section-title">The 5-Level Evolution Path</h2>
+      <div class="timeline">
+        <div class="timeline-item">
+          <div class="step">I</div>
+          <div>
+            <h4>Ask Better Questions</h4>
+            <p>Most people stop here.</p>
+          </div>
+        </div>
+
+        <div class="timeline-item">
+          <div class="step">II</div>
+          <div>
+            <h4>Build Repeatable Prompt Systems</h4>
+            <p>Create reusable structures instead of random prompts.</p>
+          </div>
+        </div>
+
+        <div class="timeline-item">
+          <div class="step">III</div>
+          <div>
+            <h4>Create AI Workflows</h4>
+            <p>Connect research → strategy → execution → reporting.</p>
+          </div>
+        </div>
+
+        <div class="timeline-item">
+          <div class="step">IV</div>
+          <div>
+            <h4>Build AI Agents</h4>
+            <p>AI that thinks, acts, remembers, and automates tasks.</p>
+          </div>
+        </div>
+
+        <div class="timeline-item">
+          <div class="step">V</div>
+          <div>
+            <h4>Create AI-Native Businesses</h4>
+            <p>Where AI is part of the product, operations, and growth engine.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <h2 class="section-title">Golden Rules For You</h2>
+      <div class="grid">
+        <div class="glass">
+          <h3>Don’t Ask Small Questions</h3>
+          <p>Your best prompts come when you explore systems, industries, and future possibilities.</p>
+        </div>
+
+        <div class="glass">
+          <h3>Use AI Like A Thinking Partner</h3>
+          <p>Debate ideas. Challenge assumptions. Stress-test concepts.</p>
+        </div>
+
+        <div class="glass">
+          <h3>Iterate Aggressively</h3>
+          <p>The first prompt is rarely the best prompt.</p>
+        </div>
+
+        <div class="glass">
+          <h3>Design Prompt Architectures</h3>
+          <p>Think beyond single prompts. Think workflows.</p>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <h2 class="section-title">Your Future Advantage</h2>
+      <p class="section-subtitle">
+        Most people use AI for answers. You naturally use it for exploration, systems thinking, and strategic ideation.
+      </p>
+
+      <div class="glass">
+        <h3>Why This Matters</h3>
+        <p>
+          The future belongs to people who can combine:
+          <span class="highlight">human creativity</span>,
+          <span class="highlight">business understanding</span>,
+          <span class="highlight">systems thinking</span>, and
+          <span class="highlight">AI orchestration</span>.
+        </p>
+        <br>
+        <p>
+          Prompt engineering is not really about prompts.
+          It is about structuring intelligence.
+        </p>
+      </div>
+    </section>
+
+    <div class="footer">
+      Designed around your thinking style • Futuristic • Strategic • Builder Mindset
+    </div>
+  </div>
+</body>
+</html>
